@@ -1,0 +1,10 @@
+target
+.metadata
+.settings
+.classpath
+.project
+*.bak
+*.class
+*.jar
+*.log
+*.old
