@@ -4,44 +4,66 @@
  */
 package com.wordpress.salaboy.pachinkoo;
 
+
+import java.util.Collection;
+
 import com.wordpress.salaboy.pachinkoo.rhs.Action;
+
 
 /**
  *
  * @author salaboy
  */
 public class Activation {
-    private String ruleName;
-    private Action action;
-    private Tuple tuple;
 
-    public Activation(String ruleName, Action action, Tuple tuple) {
+    private String ruleName;
+
+    private Action action;
+
+    private Collection< Handle > handles;
+
+
+    public Activation( String ruleName, Action action, Collection< Handle > handles ) {
+
         this.ruleName = ruleName;
         this.action = action;
-        this.tuple = tuple;
+        this.handles = handles;
     }
 
+
     public Action getAction() {
+
         return action;
     }
 
+
     public String getRuleName() {
+
         return ruleName;
     }
 
-    public Tuple getTuple() {
-        return tuple;
+
+    public Collection< Handle > getHandles() {
+
+        return handles;
     }
 
+
+    public void execute() {
+
+        action.execute( ruleName, handles, null );
+    }
+
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
-        return "Activation{" + "ruleName=" + ruleName + ", action=" + action + ", tuple=" + tuple + '}';
+
+        return "Activation [ruleName=" + ruleName + ", action=" + action + ", handles=" + handles + "]";
     }
-    
-    public void execute(){
-        action.execute(tuple, null);
-    }
-    
-        
-    
+
 }

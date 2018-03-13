@@ -1,34 +1,53 @@
 package com.wordpress.salaboy.pachinkoo;
 
+
 /**
  * @author ezsalro
  *
  */
 public class FieldRestriction {
 
-    private Class<?> clazz;
+    private Class< ? > type;
+
     private String field;
 
-    public FieldRestriction(Class<?> clazz, String field) {
+
+    public FieldRestriction( Class< ? > type, String field ) {
+
         super();
-        this.clazz = clazz;
+        this.type = type;
         this.field = field;
     }
 
-    public Class<?> getClazz() {
-        return clazz;
-    }
-
-    public void setClazz(Class<?> clazz) {
-        this.clazz = clazz;
-    }
 
     public String getField() {
+
         return field;
     }
 
-    public void setField(String field) {
+
+    public void setField( String field ) {
+
         this.field = field;
+    }
+
+
+    /**
+     * @return the type
+     */
+    public Class< ? > getType() {
+
+        return type;
+    }
+
+
+    /**
+     * @param type
+     *            the type to set
+     */
+    public void setType( Class< ? > type ) {
+
+        this.type = type;
     }
 
 }

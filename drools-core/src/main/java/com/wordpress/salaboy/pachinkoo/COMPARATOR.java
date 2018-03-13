@@ -4,10 +4,13 @@
  */
 package com.wordpress.salaboy.pachinkoo;
 
+
 /**
  *
  * @author salaboy
  */
 public enum COMPARATOR {
-    EQUAL
+    EQUAL,
+    NOT_EQUAL;
+
 }

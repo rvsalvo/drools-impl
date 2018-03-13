@@ -4,13 +4,18 @@
  */
 package com.wordpress.salaboy.pachinkoo.rhs;
 
+
+import java.util.Collection;
+
+import com.wordpress.salaboy.pachinkoo.Handle;
 import com.wordpress.salaboy.pachinkoo.PropagationContext;
-import com.wordpress.salaboy.pachinkoo.Tuple;
+
 
 /**
  *
  * @author salaboy
  */
 public interface Action {
-    public void execute(Tuple tuple, PropagationContext context);
+
+    void execute( String rule, Collection< Handle > handles, PropagationContext context );
 }
