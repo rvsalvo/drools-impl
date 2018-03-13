@@ -34,14 +34,22 @@ public class JoinNode extends BetaNode {
 
             boolean shouldPropagate = false;
 
+            Handle handle = null;
+
             if (constraint instanceof EmptyBetaConstraints) {
                 shouldPropagate = true;
+                handle = null;
             } else if (constraint instanceof SingleValueRestrictionConstraint) {
                 Object fieldValue = null;
                 Object restrictionValue = null;
                 try {
-                    fieldValue = RestrictionUtils.getValueForConstraint(leftTuple, propagationContext, constraint.getField());
-                    restrictionValue = RestrictionUtils.getValueForConstraint(rightTuple, propagationContext, constraint.getRestriction());
+
+                    RestrictionResult result = RestrictionUtils.getValueForConstraint(leftTuple, propagationContext, constraint.getField());
+                    fieldValue = result.getObject();
+
+                    result = RestrictionUtils.getValueForConstraint(rightTuple, propagationContext, constraint.getRestriction());
+                    handle = result.getHandle();
+                    restrictionValue = result.getObject();
 
                     switch (constraint.getComparator()) {
                         case EQUAL:
@@ -57,8 +65,11 @@ public class JoinNode extends BetaNode {
                 }
                 if (!shouldPropagate) {
                     try {
-                        fieldValue = RestrictionUtils.getValueForConstraint(rightTuple, propagationContext, constraint.getField());
-                        restrictionValue = RestrictionUtils.getValueForConstraint(leftTuple, propagationContext, constraint.getRestriction());
+                        RestrictionResult result = RestrictionUtils.getValueForConstraint(rightTuple, propagationContext, constraint.getField());
+                        handle = result.getHandle();
+                        fieldValue = result.getObject();
+                        result = RestrictionUtils.getValueForConstraint(leftTuple, propagationContext, constraint.getRestriction());
+                        restrictionValue = result.getObject();
 
                         switch (constraint.getComparator()) {
                             case EQUAL:
@@ -75,7 +86,11 @@ public class JoinNode extends BetaNode {
                 }
             }
             if (shouldPropagate) {
-                propagationContext.getPropagatedHandles().addAll(leftTuple.getFactHandles());
+
+                leftTuple = new LeftTuple(leftTuple.getFactHandles(), leftTuple.getSink());
+                if (handle != null && !leftTuple.getFactHandles().contains(handle)) {
+                    leftTuple.getFactHandles().add(handle);
+                }
 
                 for (final LeftTupleSink sink : sinks) {
                     sink.assertLeftTuple(leftTuple, propagationContext, wm);
@@ -96,7 +111,6 @@ public class JoinNode extends BetaNode {
             if (constraint instanceof EmptyBetaConstraints) {
                 System.out.println("Left Tuple = " + leftTuple);
                 System.out.println("Right Tuple = " + rightTuple);
-                propagationContext.getPropagatedHandles().addAll(leftTuple.getFactHandles());
                 for (final LeftTupleSink sink : sinks) {
                     sink.assertLeftTuple(leftTuple, propagationContext, wm);
                 }

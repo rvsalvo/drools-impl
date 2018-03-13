@@ -99,7 +99,6 @@ public class AlphaNode extends ObjectSource implements ObjectSink {
                     break;
             }
             if (shouldPropagate) {
-                propagationContext.getPropagatedHandles().add(factHandle);
                 if (this.variable != null) {
                     propagationContext.getBindingVariables().put(this.variable, result);
                 }

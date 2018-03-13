@@ -4,9 +4,7 @@
  */
 package com.wordpress.salaboy.pachinkoo;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -16,12 +14,6 @@ import java.util.Map;
 public class PropagationContext {
 
     private final Map<String, Object> bindingVariables = new HashMap<>();
-
-    private final Collection<Handle> propagatedHandles = new HashSet<>();
-
-    public Collection<Handle> getPropagatedHandles() {
-        return propagatedHandles;
-    }
 
     public Map<String, Object> getBindingVariables() {
         return bindingVariables;

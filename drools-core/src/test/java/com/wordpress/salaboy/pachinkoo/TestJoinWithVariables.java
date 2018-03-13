@@ -118,8 +118,49 @@ public class TestJoinWithVariables {
         wm.insert(new Movie("Avengers"));
         assertEquals(1, wm.getAgenda().size());
 
+        wm.insert(new Movie("Avengers"));
+
         final int fired = wm.fireAllRules();
-        assertEquals(1, fired);
+        assertEquals(2, fired);
+
+    }
+
+    @Test
+    public void testRepeatedNoAlphaNodeInformation() {
+
+        // Create Working Memory
+        final WorkingMemory wm = new WorkingMemoryImpl();
+        // Get the Root/Rete Node
+        final Rete rete = wm.getRete();
+
+        // Create one Object Type Node: Cheese()
+        final ObjectTypeNode movieTypeNode = new ObjectTypeNode(Movie.class.getCanonicalName());
+
+        final LeftInputAdapterNode leftInputAdapter = new LeftInputAdapterNode();
+        movieTypeNode.addObjectSink(leftInputAdapter);
+
+        final RuleTerminalNode terminalNode = new RuleTerminalNode("matches a person and execute an action", new DefaultAction() {
+
+            @Override
+            public void execute(String rule, Collection<Handle> handles, PropagationContext context) {
+
+                System.out.println(getResult(handles, Movie.class, "getName"));
+            }
+        });
+        leftInputAdapter.addTupleSink(terminalNode);
+
+        // Add OTN Cheese() to the Network
+        rete.addObjectSink(movieTypeNode);
+
+        wm.insert(new Movie("Back to the Future II"));
+        // Nothing happens until here.. let's add another Fact
+        assertEquals(1, wm.getAgenda().size());
+
+        wm.insert(new Movie("Back to the Future II"));
+        assertEquals(2, wm.getAgenda().size());
+
+        final int fired = wm.fireAllRules();
+        assertEquals(2, fired);
 
     }
 }
