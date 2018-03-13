@@ -5,6 +5,7 @@
 package com.wordpress.salaboy.pachinkoo;
 
 import java.lang.reflect.Field;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,17 +84,28 @@ public class AlphaNode extends ObjectSource implements ObjectSink {
             if (field == null) {
                 return;
             }
+            boolean shouldPropagate = false;
             final Object result = field.get(object);
             switch (comparator) {
                 case EQUAL:
-                    if (result.equals(value)) {
-                        if (this.variable != null) {
-                            propagationContext.getBindingVariables().put(this.variable, result);
-                        }
-                        sinkPropagator.propagateAssertObject(factHandle, propagationContext, wm);
+                    if (Objects.equals(result, value)) {
+                        shouldPropagate = true;
+                    }
+                    break;
+                case NOT_EQUAL:
+                    if (!Objects.equals(result, value)) {
+                        shouldPropagate = true;
                     }
                     break;
             }
+            if (shouldPropagate) {
+                propagationContext.getPropagatedHandles().add(factHandle);
+                if (this.variable != null) {
+                    propagationContext.getBindingVariables().put(this.variable, result);
+                }
+                sinkPropagator.propagateAssertObject(factHandle, propagationContext, wm);
+            }
+
         } catch (final Exception ex) {
             Logger.getLogger(AlphaNode.class.getName()).log(Level.SEVERE, null, ex);
         }

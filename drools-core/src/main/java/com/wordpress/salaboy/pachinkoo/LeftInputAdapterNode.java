@@ -19,7 +19,7 @@ public class LeftInputAdapterNode extends LeftTupleSource implements ObjectSink 
 
     @Override
     public void assertObject(Handle factHandle, PropagationContext propagationContext, WorkingMemory wm) {
-
+        propagationContext.getPropagatedHandles().add(factHandle);
         sinkAdapter.createAndPropagateAssertLeftTuple(factHandle, propagationContext, wm);
 
     }
