@@ -81,6 +81,14 @@ public class TestJoinWithVariables {
 
     }
 
+    /**
+     * rule rule01<br/>
+     * when<br/>
+     * &nbsp;$movie:Movie( name == 'Avengers' )<br/>
+     * then<br/>
+     * &nbsp;System.out.println($movie.getName());<br/>
+     * end<br/>
+     */
     @Test
     public void testRepeatedInformation() {
 
@@ -92,18 +100,18 @@ public class TestJoinWithVariables {
         // Create one Object Type Node: Cheese()
         final ObjectTypeNode movieTypeNode = new ObjectTypeNode(Movie.class.getCanonicalName());
 
-        final AlphaNode alphaNode = new AlphaNode(COMPARATOR.EQUAL, "name", "Avengers");
+        final AlphaNode alphaNode = new AlphaNode(new ClassVariable("$movie"), COMPARATOR.EQUAL, "name", "Avengers");
         movieTypeNode.addObjectSink(alphaNode);
 
         final LeftInputAdapterNode leftInputAdapter = new LeftInputAdapterNode();
         alphaNode.addObjectSink(leftInputAdapter);
 
-        final RuleTerminalNode terminalNode = new RuleTerminalNode("matches a person and execute an action", new DefaultAction() {
+        final RuleTerminalNode terminalNode = new RuleTerminalNode("rule01", new DefaultAction() {
 
             @Override
             public void execute(String rule, Collection<Handle> handles, PropagationContext context) {
 
-                System.out.println(getResult(handles, Movie.class, "getName"));
+                System.out.println(getResult(handles, context.getBindingVariables(), "$movie", "getName"));
             }
         });
         leftInputAdapter.addTupleSink(terminalNode);
@@ -134,17 +142,17 @@ public class TestJoinWithVariables {
         final Rete rete = wm.getRete();
 
         // Create one Object Type Node: Cheese()
-        final ObjectTypeNode movieTypeNode = new ObjectTypeNode(Movie.class.getCanonicalName());
+        final ObjectTypeNode movieTypeNode = new ObjectTypeNode(new ClassVariable("$movie"), Movie.class.getCanonicalName());
 
         final LeftInputAdapterNode leftInputAdapter = new LeftInputAdapterNode();
         movieTypeNode.addObjectSink(leftInputAdapter);
 
-        final RuleTerminalNode terminalNode = new RuleTerminalNode("matches a person and execute an action", new DefaultAction() {
+        final RuleTerminalNode terminalNode = new RuleTerminalNode("rule no alpha node", new DefaultAction() {
 
             @Override
             public void execute(String rule, Collection<Handle> handles, PropagationContext context) {
 
-                System.out.println(getResult(handles, Movie.class, "getName"));
+                System.out.println(getResult(handles, context.getBindingVariables(), "$movie", "getName"));
             }
         });
         leftInputAdapter.addTupleSink(terminalNode);

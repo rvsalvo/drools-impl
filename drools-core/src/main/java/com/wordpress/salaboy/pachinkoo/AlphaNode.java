@@ -32,10 +32,29 @@ public class AlphaNode extends ObjectSource implements ObjectSink {
     private final String fieldName;
     private final String value;
 
+    private ClassVariable classVariable;
+
+    public ClassVariable getClassVariable() {
+        return classVariable;
+    }
+
+    public void setClassVariable(ClassVariable classVariable) {
+        this.classVariable = classVariable;
+    }
+
     private final FieldVariable fieldVariable;
 
     public FieldVariable getFieldVariable() {
         return fieldVariable;
+    }
+
+    public AlphaNode(ClassVariable classVariable, COMPARATOR comparator, String fieldName, String value) {
+        this.classVariable = classVariable;
+        this.variable = null;
+        this.comparator = comparator;
+        this.fieldName = fieldName;
+        this.value = value;
+        this.fieldVariable = null;
     }
 
     public AlphaNode(COMPARATOR comparator, String fieldName, String value) {
@@ -99,6 +118,9 @@ public class AlphaNode extends ObjectSource implements ObjectSink {
                     break;
             }
             if (shouldPropagate) {
+                if (this.classVariable != null) {
+                    propagationContext.getBindingVariables().put(this.classVariable.getName(), object);
+                }
                 if (this.variable != null) {
                     propagationContext.getBindingVariables().put(this.variable, result);
                 }
