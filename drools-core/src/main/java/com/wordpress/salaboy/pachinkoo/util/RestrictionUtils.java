@@ -2,6 +2,7 @@ package com.wordpress.salaboy.pachinkoo.util;
 
 import java.lang.reflect.Field;
 
+import com.wordpress.salaboy.pachinkoo.ClassVariable;
 import com.wordpress.salaboy.pachinkoo.FieldRestriction;
 import com.wordpress.salaboy.pachinkoo.FieldVariable;
 import com.wordpress.salaboy.pachinkoo.Handle;
@@ -19,6 +20,8 @@ public class RestrictionUtils {
 
         Object value = null;
         Handle resultHandle = null;
+        ClassVariable classVariable = null;
+        String var = null;
 
         if (constraint instanceof FieldRestriction) {
             final FieldRestriction restriction = (FieldRestriction) constraint;
@@ -31,6 +34,8 @@ public class RestrictionUtils {
                     try {
                         value = field.get(handle.getObject());
                         resultHandle = handle;
+                        var = restriction.getVariable();
+                        classVariable = restriction.getClassVariable();
                         break;
                     } catch (final Exception e) {
                         e.printStackTrace();
@@ -43,7 +48,7 @@ public class RestrictionUtils {
         } else {
             value = constraint;
         }
-        return new RestrictionResult(value, resultHandle);
+        return new RestrictionResult(value, resultHandle, classVariable, var);
     }
 
     public static Class<?> getFieldType(PropagationContext propagationContext, Object field) {

@@ -4,11 +4,9 @@
  */
 package com.wordpress.salaboy.pachinkoo;
 
-
 import java.util.Collection;
 
 import com.wordpress.salaboy.pachinkoo.rhs.Action;
-
 
 /**
  *
@@ -16,44 +14,48 @@ import com.wordpress.salaboy.pachinkoo.rhs.Action;
  */
 public class Activation {
 
-    private String ruleName;
+    private final String ruleName;
 
-    private Action action;
+    private final Action action;
 
-    private Collection< Handle > handles;
+    private final Collection<Handle> handles;
 
+    private PropagationContext context;
 
-    public Activation( String ruleName, Action action, Collection< Handle > handles ) {
+    public Activation(String ruleName, Action action, Collection<Handle> handles) {
 
         this.ruleName = ruleName;
         this.action = action;
         this.handles = handles;
     }
 
+    public Activation(String ruleName, Action action, Collection<Handle> handles, PropagationContext context) {
+
+        this.ruleName = ruleName;
+        this.action = action;
+        this.handles = handles;
+        this.context = context;
+    }
 
     public Action getAction() {
 
         return action;
     }
 
-
     public String getRuleName() {
 
         return ruleName;
     }
 
-
-    public Collection< Handle > getHandles() {
+    public Collection<Handle> getHandles() {
 
         return handles;
     }
 
-
     public void execute() {
 
-        action.execute( ruleName, handles, null );
+        action.execute(ruleName, handles, context);
     }
-
 
     /*
      * (non-Javadoc)

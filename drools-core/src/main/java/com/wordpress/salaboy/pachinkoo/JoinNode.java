@@ -34,22 +34,19 @@ public class JoinNode extends BetaNode {
 
             boolean shouldPropagate = false;
 
-            Handle handle = null;
+            RestrictionResult leftResult = null;
+            RestrictionResult rightResult = null;
 
             if (constraint instanceof EmptyBetaConstraints) {
                 shouldPropagate = true;
-                handle = null;
             } else if (constraint instanceof SingleValueRestrictionConstraint) {
-                Object fieldValue = null;
-                Object restrictionValue = null;
                 try {
 
-                    RestrictionResult result = RestrictionUtils.getValueForConstraint(leftTuple, propagationContext, constraint.getField());
-                    fieldValue = result.getObject();
+                    leftResult = RestrictionUtils.getValueForConstraint(leftTuple, propagationContext, constraint.getField());
+                    final Object fieldValue = leftResult.getObject();
 
-                    result = RestrictionUtils.getValueForConstraint(rightTuple, propagationContext, constraint.getRestriction());
-                    handle = result.getHandle();
-                    restrictionValue = result.getObject();
+                    rightResult = RestrictionUtils.getValueForConstraint(rightTuple, propagationContext, constraint.getRestriction());
+                    final Object restrictionValue = rightResult.getObject();
 
                     switch (constraint.getComparator()) {
                         case EQUAL:
@@ -65,11 +62,10 @@ public class JoinNode extends BetaNode {
                 }
                 if (!shouldPropagate) {
                     try {
-                        RestrictionResult result = RestrictionUtils.getValueForConstraint(rightTuple, propagationContext, constraint.getField());
-                        handle = result.getHandle();
-                        fieldValue = result.getObject();
-                        result = RestrictionUtils.getValueForConstraint(leftTuple, propagationContext, constraint.getRestriction());
-                        restrictionValue = result.getObject();
+                        rightResult = RestrictionUtils.getValueForConstraint(rightTuple, propagationContext, constraint.getField());
+                        final Object fieldValue = rightResult.getObject();
+                        leftResult = RestrictionUtils.getValueForConstraint(leftTuple, propagationContext, constraint.getRestriction());
+                        final Object restrictionValue = leftResult.getObject();
 
                         switch (constraint.getComparator()) {
                             case EQUAL:
@@ -88,9 +84,8 @@ public class JoinNode extends BetaNode {
             if (shouldPropagate) {
 
                 leftTuple = new LeftTuple(leftTuple.getFactHandles(), leftTuple.getSink());
-                if (handle != null && !leftTuple.getFactHandles().contains(handle)) {
-                    leftTuple.getFactHandles().add(handle);
-                }
+                populateResults(leftTuple, propagationContext, rightResult);
+                populateResults(leftTuple, propagationContext, leftResult);
 
                 for (final LeftTupleSink sink : sinks) {
                     sink.assertLeftTuple(leftTuple, propagationContext, wm);
@@ -99,6 +94,21 @@ public class JoinNode extends BetaNode {
 
         }
 
+    }
+
+    private void populateResults(LeftTuple leftTuple, PropagationContext propagationContext, RestrictionResult restrictionResult) {
+        if (restrictionResult != null) {
+            if (restrictionResult.getVariable() != null) {
+                propagationContext.getBindingVariables().put(restrictionResult.getVariable(), restrictionResult.getObject());
+            }
+            if (restrictionResult.getClassVariable() != null && restrictionResult.getHandle() != null) {
+                propagationContext.getBindingVariables().put(restrictionResult.getClassVariable().getName(),
+                        restrictionResult.getHandle().getObject());
+            }
+            if (restrictionResult.getHandle() != null && !leftTuple.getFactHandles().contains(restrictionResult.getHandle())) {
+                leftTuple.getFactHandles().add(restrictionResult.getHandle());
+            }
+        }
     }
 
     @Override

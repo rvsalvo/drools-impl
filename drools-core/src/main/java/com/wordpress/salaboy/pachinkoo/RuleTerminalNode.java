@@ -28,7 +28,7 @@ public class RuleTerminalNode extends ObjectSource implements LeftTupleSink {
     public void assertLeftTuple(LeftTuple leftTuple, PropagationContext context, WorkingMemory wm) {
         //Create ActivationItem and place it into the agenda that should be contained inside the working memory
         final Agenda agenda = wm.getAgenda();
-        agenda.addActivation(new Activation(this.rule, action, leftTuple.getFactHandles()));
+        agenda.addActivation(new Activation(this.rule, action, leftTuple.getFactHandles(), context));
 
     }
 

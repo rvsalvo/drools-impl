@@ -41,15 +41,15 @@ public class TestJoinWithVariables {
         final LeftInputAdapterNode leftInputAdapter = new LeftInputAdapterNode();
         alphaNode.addObjectSink(leftInputAdapter);
 
-        final JoinNode joinNode = new JoinNode(new SingleValueRestrictionConstraint(new FieldRestriction(Person.class, "favoriteCheese"),
-                new FieldVariable("$cheddar"), COMPARATOR.EQUAL));
+        final JoinNode joinNode = new JoinNode(new SingleValueRestrictionConstraint(
+                new FieldRestriction(new ClassVariable("$person"), Person.class, "favoriteCheese"), new FieldVariable("$cheddar"), COMPARATOR.EQUAL));
 
         final RuleTerminalNode terminalNode = new RuleTerminalNode("matches a person and execute an action", new DefaultAction() {
 
             @Override
             public void execute(String rule, Collection<Handle> handles, PropagationContext context) {
 
-                System.out.println(getResult(handles, Person.class, "getName") + " likes cheese");
+                System.out.println(getResult(handles, context.getBindingVariables(), "$person", "getName") + " likes cheese");
             }
         });
         leftInputAdapter.addTupleSink(joinNode);
@@ -164,7 +164,7 @@ public class TestJoinWithVariables {
         // Nothing happens until here.. let's add another Fact
         assertEquals(1, wm.getAgenda().size());
 
-        wm.insert(new Movie("Back to the Future II"));
+        wm.insert(new Movie("Back to the Future III"));
         assertEquals(2, wm.getAgenda().size());
 
         final int fired = wm.fireAllRules();
