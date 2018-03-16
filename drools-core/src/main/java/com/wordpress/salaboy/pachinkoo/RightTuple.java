@@ -4,8 +4,12 @@
  */
 package com.wordpress.salaboy.pachinkoo;
 
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 
 /**
  *
@@ -13,33 +17,62 @@ import java.util.List;
  */
 public class RightTuple implements Tuple {
 
-    private final LinkedList<Handle> handles = new LinkedList<Handle>();
+    private final LinkedList< Handle > handles = new LinkedList< Handle >();
+
     protected RightTupleSink sink;
 
-    public RightTuple(Handle handle, RightTupleSink sink) {
+    private final Map< String, Object > bindVariables = new HashMap<>();
+
+
+    public RightTuple( Handle handle, RightTupleSink sink ) {
+
         this.sink = sink;
-        handles.add(handle);
+        handles.add( handle );
     }
 
-    @Override
-    public Handle get(int pattern) {
-        return handles.get(pattern);
+
+    public RightTuple( Handle handle, RightTupleSink sink, Map< String, Object > bindVariables ) {
+
+        this.sink = sink;
+        this.bindVariables.putAll( bindVariables );
+        handles.add( handle );
     }
 
+
     @Override
-    public List<Handle> getFactHandles() {
+    public Handle get( int pattern ) {
+
+        return handles.get( pattern );
+    }
+
+
+    @Override
+    public List< Handle > getFactHandles() {
 
         return handles;
     }
 
+
     @Override
     public int size() {
+
         return handles.size();
     }
 
+
     @Override
     public String toString() {
+
         return "RightTuple{" + "handles=" + handles + ", sink=" + sink + '}';
+    }
+
+
+    /**
+     * @return the bindVariables
+     */
+    public Map< String, Object > getBindVariables() {
+
+        return bindVariables;
     }
 
 }

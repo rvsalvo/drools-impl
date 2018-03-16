@@ -116,11 +116,12 @@ public class TestJoinWithVariables {
         final AlphaNode alphaNode2 = new AlphaNode( "$movieName2", COMPARATOR.EQUAL, "name", "Back to the Future II" );
         movieTypeNode.addObjectSink( alphaNode2 );
 
-        final LeftInputAdapterNode leftInputAdapter2 = new LeftInputAdapterNode();
-        alphaNode2.addObjectSink( leftInputAdapter2 );
+        // final JoinNode joinNode =
+        // new JoinNode( new SingleValueRestrictionConstraint( new
+        // FieldVariable( "$movieName" ), new FieldVariable( "$movieName2" ),
+        // COMPARATOR.NOT_EQUAL ) );
 
-        final JoinNode joinNode =
-            new JoinNode( new SingleValueRestrictionConstraint( new FieldVariable( "$movieName" ), new FieldVariable( "$movieName2" ), COMPARATOR.NOT_EQUAL ) );
+        final JoinNode joinNode = new JoinNode( new EmptyBetaConstraints() );
 
         final RuleTerminalNode terminalNode = new RuleTerminalNode( "rule movie", new DefaultAction() {
 
@@ -133,7 +134,7 @@ public class TestJoinWithVariables {
         } );
         leftInputAdapter.addTupleSink( joinNode );
 
-        leftInputAdapter2.addTupleSink( joinNode );
+        alphaNode2.addObjectSink( joinNode );
 
         joinNode.addTupleSink( terminalNode );
 
