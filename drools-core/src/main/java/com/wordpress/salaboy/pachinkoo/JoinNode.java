@@ -4,11 +4,13 @@
  */
 package com.wordpress.salaboy.pachinkoo;
 
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.wordpress.salaboy.pachinkoo.util.RestrictionUtils;
-
 
 /**
  *
@@ -16,84 +18,72 @@ import com.wordpress.salaboy.pachinkoo.util.RestrictionUtils;
  */
 public class JoinNode extends BetaNode {
 
-    public JoinNode( BetaConstraints constraint ) {
+    public JoinNode(BetaConstraints constraint) {
 
-        super( constraint );
+        super(constraint);
     }
-
 
     @Override
     public long getId() {
 
-        throw new UnsupportedOperationException( "Not supported yet." );
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
-
     @Override
-    public void assertLeftTuple( LeftTuple leftTuple, PropagationContext propagationContext, WorkingMemory wm ) {
+    public void assertLeftTuple(LeftTuple leftTuple, PropagationContext propagationContext, WorkingMemory wm) {
 
-        leftTuple.getBindVariables().putAll( propagationContext.getBindingVariables() );
-        getMemory().addLeftTuple( leftTuple );
+        leftTuple.getBindVariables().putAll(propagationContext.getBindingVariables());
+        getMemory().addLeftTuple(leftTuple);
 
-        for ( final RightTuple rightTuple : getMemory().getRightTupleMemory() ) {
+        for (final RightTuple rightTuple : getMemory().getRightTupleMemory()) {
 
             boolean shouldPropagate = false;
 
             RestrictionResult leftResult = null;
             RestrictionResult rightResult = null;
 
-            if ( constraint instanceof EmptyBetaConstraints ) {
+            final Map<String, Object> bindingVariables = new HashMap<>();
+            bindingVariables.putAll(propagationContext.getBindingVariables());
+            bindingVariables.putAll(rightTuple.getBindVariables());
+
+            if (constraint instanceof EmptyBetaConstraints) {
                 shouldPropagate = true;
-            } else if ( constraint instanceof SingleValueRestrictionConstraint ) {
+            } else if (constraint instanceof SingleValueRestrictionConstraint) {
                 try {
 
-                    leftResult = RestrictionUtils.getValueForConstraint( leftTuple, propagationContext, constraint.getField() );
+                    final List<Handle> handles = new ArrayList<>();
+                    handles.addAll(leftTuple.getFactHandles());
+                    handles.addAll(rightTuple.getFactHandles());
+
+                    leftResult = RestrictionUtils.getValueForConstraint(handles, bindingVariables, constraint.getField());
                     final Object fieldValue = leftResult.getObject();
 
-                    rightResult = RestrictionUtils.getValueForConstraint( rightTuple, propagationContext, constraint.getRestriction() );
+                    rightResult = RestrictionUtils.getValueForConstraint(handles, bindingVariables, constraint.getRestriction());
                     final Object restrictionValue = rightResult.getObject();
 
-                    switch ( constraint.getComparator() ) {
+                    switch (constraint.getComparator()) {
                         case EQUAL:
-                            shouldPropagate = Objects.equals( fieldValue, restrictionValue );
+                            shouldPropagate = Objects.equals(fieldValue, restrictionValue);
                             break;
                         case NOT_EQUAL:
-                            shouldPropagate = !Objects.equals( fieldValue, restrictionValue );
+                            shouldPropagate = !Objects.equals(fieldValue, restrictionValue);
                             break;
                     }
 
-                } catch ( final Exception e ) {
+                } catch (final Exception e) {
                     e.printStackTrace();
                 }
-                if ( !shouldPropagate ) {
-                    try {
-                        rightResult = RestrictionUtils.getValueForConstraint( rightTuple, propagationContext, constraint.getField() );
-                        final Object fieldValue = rightResult.getObject();
-                        leftResult = RestrictionUtils.getValueForConstraint( leftTuple, propagationContext, constraint.getRestriction() );
-                        final Object restrictionValue = leftResult.getObject();
-
-                        switch ( constraint.getComparator() ) {
-                            case EQUAL:
-                                shouldPropagate = Objects.equals( fieldValue, restrictionValue );
-                                break;
-                            case NOT_EQUAL:
-                                shouldPropagate = !Objects.equals( fieldValue, restrictionValue );
-                                break;
-                        }
-
-                    } catch ( final Exception e ) {
-                        e.printStackTrace();
-                    }
-                }
             }
-            if ( shouldPropagate ) {
+            if (shouldPropagate) {
 
-                leftTuple = new LeftTuple( leftTuple.getFactHandles(), leftTuple.getSink(), leftTuple.getBindVariables() );
-                populateResults( leftTuple, propagationContext, rightResult );
-                populateResults( leftTuple, propagationContext, leftResult );
+                final PropagationContext context = new PropagationContext(bindingVariables);
 
-                for ( final LeftTupleSink sink : sinks ) {
-                    sink.assertLeftTuple( leftTuple, propagationContext, wm );
+                leftTuple = new LeftTuple(leftTuple.getFactHandles(), leftTuple.getSink(), leftTuple.getBindVariables());
+                populateResults(leftTuple, context, rightResult);
+                populateResults(leftTuple, context, leftResult);
+
+                for (final LeftTupleSink sink : sinks) {
+                    sink.assertLeftTuple(leftTuple, context, wm);
                 }
             }
 
@@ -101,41 +91,76 @@ public class JoinNode extends BetaNode {
 
     }
 
+    private void populateResults(Tuple leftTuple, PropagationContext propagationContext, RestrictionResult restrictionResult) {
 
-    private void populateResults( LeftTuple leftTuple, PropagationContext propagationContext, RestrictionResult restrictionResult ) {
-
-        if ( restrictionResult != null ) {
-            if ( restrictionResult.getVariable() != null ) {
-                propagationContext.getBindingVariables().put( restrictionResult.getVariable(), restrictionResult.getObject() );
+        if (restrictionResult != null) {
+            if (restrictionResult.getVariable() != null) {
+                propagationContext.getBindingVariables().put(restrictionResult.getVariable(), restrictionResult.getObject());
             }
-            if ( restrictionResult.getClassVariable() != null && restrictionResult.getHandle() != null ) {
-                propagationContext.getBindingVariables().put( restrictionResult.getClassVariable().getName(), restrictionResult.getHandle().getObject() );
+            if (restrictionResult.getClassVariable() != null && restrictionResult.getHandle() != null) {
+                propagationContext.getBindingVariables().put(restrictionResult.getClassVariable().getName(),
+                        restrictionResult.getHandle().getObject());
             }
-            if ( restrictionResult.getHandle() != null && !leftTuple.getFactHandles().contains( restrictionResult.getHandle() ) ) {
-                leftTuple.getFactHandles().add( restrictionResult.getHandle() );
+            if (restrictionResult.getHandle() != null && !leftTuple.getFactHandles().contains(restrictionResult.getHandle())) {
+                leftTuple.getFactHandles().add(restrictionResult.getHandle());
             }
         }
     }
-
 
     @Override
-    public void assertObject( Handle factHandle, PropagationContext propagationContext, WorkingMemory wm ) {
+    public void assertObject(Handle factHandle, PropagationContext propagationContext, WorkingMemory wm) {
 
-        final RightTuple rightTuple = new RightTuple( factHandle, this, propagationContext.getBindingVariables() );
-        getMemory().addRightTuple( rightTuple );
-        for ( LeftTuple leftTuple : getMemory().getLeftTupleMemory() ) {
-            if ( constraint instanceof EmptyBetaConstraints ) {
-                leftTuple = new LeftTuple( leftTuple.getFactHandles(), leftTuple.getSink(), leftTuple.getBindVariables() );
-                leftTuple.getFactHandles().add( factHandle );
-                for ( final LeftTupleSink sink : sinks ) {
-                    sink.assertLeftTuple( leftTuple, propagationContext, wm );
+        final RightTuple rightTuple = new RightTuple(factHandle, this, propagationContext.getBindingVariables());
+        getMemory().addRightTuple(rightTuple);
+        for (LeftTuple leftTuple : getMemory().getLeftTupleMemory()) {
+
+            boolean shouldPropagate = false;
+
+            RestrictionResult leftResult = null;
+            RestrictionResult rightResult = null;
+
+            final Map<String, Object> bindingVariables = new HashMap<>();
+            bindingVariables.putAll(propagationContext.getBindingVariables());
+            bindingVariables.putAll(leftTuple.getBindVariables());
+
+            if (constraint instanceof EmptyBetaConstraints) {
+                shouldPropagate = true;
+            } else if (constraint instanceof SingleValueRestrictionConstraint) {
+
+                final List<Handle> handles = new ArrayList<>();
+                handles.addAll(leftTuple.getFactHandles());
+                handles.addAll(rightTuple.getFactHandles());
+
+                try {
+
+                    leftResult = RestrictionUtils.getValueForConstraint(handles, bindingVariables, constraint.getField());
+                    final Object fieldValue = leftResult.getObject();
+
+                    rightResult = RestrictionUtils.getValueForConstraint(handles, bindingVariables, constraint.getRestriction());
+                    final Object restrictionValue = rightResult.getObject();
+
+                    switch (constraint.getComparator()) {
+                        case EQUAL:
+                            shouldPropagate = Objects.equals(fieldValue, restrictionValue);
+                            break;
+                        case NOT_EQUAL:
+                            shouldPropagate = !Objects.equals(fieldValue, restrictionValue);
+                            break;
+                    }
+
+                } catch (final Exception e) {
+                    e.printStackTrace();
                 }
-            } else if ( constraint instanceof SingleValueRestrictionConstraint ) {
 
-                // for (LeftTupleSink sink : sinks) {
-                // sink.assertLeftTuple(leftTuple, propagationContext, wm);
-                // }
+            }
 
+            if (shouldPropagate) {
+                leftTuple = new LeftTuple(leftTuple.getFactHandles(), leftTuple.getSink(), leftTuple.getBindVariables());
+                leftTuple.getFactHandles().add(factHandle);
+                final PropagationContext context = new PropagationContext(bindingVariables);
+                for (final LeftTupleSink sink : sinks) {
+                    sink.assertLeftTuple(leftTuple, context, wm);
+                }
             }
 
         }

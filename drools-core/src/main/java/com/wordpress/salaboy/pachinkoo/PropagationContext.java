@@ -9,11 +9,21 @@ import java.util.Map;
 
 /**
  *
- * @author salaboy
+ * @author Rodrigo Salvo
  */
 public class PropagationContext {
 
-    private final Map<String, Object> bindingVariables = new HashMap<>();
+    private final Map<String, Object> bindingVariables;
+
+    public PropagationContext() {
+        super();
+        this.bindingVariables = new HashMap<>();
+    }
+
+    public PropagationContext(Map<String, Object> bindingVariables) {
+        super();
+        this.bindingVariables = bindingVariables;
+    }
 
     public Map<String, Object> getBindingVariables() {
         return bindingVariables;

@@ -1,6 +1,7 @@
 package com.wordpress.salaboy.pachinkoo.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * @author ezsalro
@@ -16,6 +17,10 @@ public class ReflectionUtils {
             }
         }
         return null;
+    }
+
+    public static Method getMethod(Class<? extends Object> clazz, String methodName) throws NoSuchMethodException, SecurityException {
+        return clazz.getMethod(methodName);
     }
 
 }
