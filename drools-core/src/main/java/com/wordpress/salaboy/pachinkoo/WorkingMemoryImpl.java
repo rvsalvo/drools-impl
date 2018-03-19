@@ -4,8 +4,10 @@
  */
 package com.wordpress.salaboy.pachinkoo;
 
+
 import java.util.HashMap;
 import java.util.Map;
+
 
 /**
  *
@@ -17,13 +19,17 @@ public class WorkingMemoryImpl implements WorkingMemory {
 
     private final Rete rete;
 
-    private final Map<Handle, Object> assertStore;
+    private final Map< Handle, Object > assertStore;
+
+    private final Map< String, Object > globals = new HashMap<>();
+
 
     public WorkingMemoryImpl() {
 
-        rete = new Rete(this);
-        assertStore = new HashMap<Handle, Object>();
+        rete = new Rete( this );
+        assertStore = new HashMap< Handle, Object >();
     }
+
 
     @Override
     public Agenda getAgenda() {
@@ -31,11 +37,13 @@ public class WorkingMemoryImpl implements WorkingMemory {
         return this.agenda;
     }
 
+
     @Override
     public int fireAllRules() {
 
         return this.agenda.fireAllRules();
     }
+
 
     @Override
     public Rete getRete() {
@@ -43,30 +51,44 @@ public class WorkingMemoryImpl implements WorkingMemory {
         return rete;
     }
 
-    @Override
-    public Handle insert(Object object) {
 
-        final Handle handle = createHandle(object);
-        rete.assertObject(handle, new PropagationContext(), this);
+    @Override
+    public Handle insert( Object object ) {
+
+        final Handle handle = createHandle( object );
+        rete.assertObject( handle, new PropagationContext(), this );
         return handle;
     }
 
-    private Handle createHandle(Object object) {
 
-        final FactHandle factHandle = new FactHandle(object);
-        assertStore.put(factHandle, object);
+    private Handle createHandle( Object object ) {
+
+        final FactHandle factHandle = new FactHandle( object );
+        assertStore.put( factHandle, object );
         return factHandle;
     }
 
-    public Object getObjectForFactHandle(Handle handle) {
 
-        return assertStore.get(handle);
+    public Object getObjectForFactHandle( Handle handle ) {
+
+        return assertStore.get( handle );
     }
 
+
     @Override
-    public Map<Handle, Object> getAssertedFacts() {
+    public Map< Handle, Object > getAssertedFacts() {
 
         return assertStore;
+    }
+
+
+    
+    /**
+     * @return the globals
+     */
+    public Map< String, Object > getGlobals() {
+    
+        return globals;
     }
 
 }

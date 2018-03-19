@@ -1,12 +1,15 @@
 package com.wordpress.salaboy.pachinkoo;
 
+
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.junit.Test;
 
 import com.wordpress.salaboy.pachinkoo.rhs.DefaultAction;
+
 
 /**
  * @author ezsalro
@@ -21,7 +24,8 @@ public class TestComplexJoins {
      * &nbsp;Movie( $movieName2: name == "Back to The future II" )<br/>
      * &nbsp;eval( $movieName2 != $movieName )<br/>
      * then<br/>
-     * &nbsp;System.out.println( $movieName + " not equals " + $movieName2 );<br/>
+     * &nbsp;System.out.println( $movieName + " not equals " + $movieName2
+     * );<br/>
      * end<br/>
      */
     @Test
@@ -33,47 +37,100 @@ public class TestComplexJoins {
         final Rete rete = wm.getRete();
 
         // Create one Object Type Node: Cheese()
-        final ObjectTypeNode movieTypeNode = new ObjectTypeNode(Movie.class.getCanonicalName());
+        final ObjectTypeNode movieTypeNode = new ObjectTypeNode( Movie.class.getCanonicalName() );
 
-        final AlphaNode alphaNode = new AlphaNode("$movieName", COMPARATOR.EQUAL, "name", "Avengers");
-        movieTypeNode.addObjectSink(alphaNode);
+        final AlphaNode alphaNode = new AlphaNode( "$movieName", COMPARATOR.EQUAL, "name", "Avengers" );
+        movieTypeNode.addObjectSink( alphaNode );
 
         final LeftInputAdapterNode leftInputAdapter = new LeftInputAdapterNode();
-        alphaNode.addObjectSink(leftInputAdapter);
+        alphaNode.addObjectSink( leftInputAdapter );
 
-        final AlphaNode alphaNode2 = new AlphaNode("$movieName2", COMPARATOR.EQUAL, "name", "Back to the Future II");
-        movieTypeNode.addObjectSink(alphaNode2);
+        final AlphaNode alphaNode2 = new AlphaNode( "$movieName2", COMPARATOR.EQUAL, "name", "Back to the Future II" );
+        movieTypeNode.addObjectSink( alphaNode2 );
 
-        final JoinNode joinNode = new JoinNode(
-                new SingleValueRestrictionConstraint(new FieldVariable("$movieName"), new FieldVariable("$movieName2"), COMPARATOR.NOT_EQUAL));
+        final JoinNode joinNode =
+            new JoinNode( new SingleValueRestrictionConstraint( new FieldVariable( "$movieName" ), new FieldVariable( "$movieName2" ), COMPARATOR.NOT_EQUAL ) );
 
-        final RuleTerminalNode terminalNode = new RuleTerminalNode("rule movie", new DefaultAction() {
+        final RuleTerminalNode terminalNode = new RuleTerminalNode( "rule movie", new DefaultAction() {
 
             @Override
-            public void execute(String rule, Collection<Handle> handles, PropagationContext context) {
+            public void execute( String rule, Collection< Handle > handles, PropagationContext context ) {
 
-                System.out.println(getResult(context.getBindingVariables(), "$movieName") + " not equals "
-                        + getResult(context.getBindingVariables(), "$movieName2"));
+                System.out.println(
+                    getResult( context.getBindingVariables(), "$movieName" ) + " not equals " + getResult( context.getBindingVariables(), "$movieName2" ) );
             }
-        });
-        leftInputAdapter.addTupleSink(joinNode);
+        } );
+        leftInputAdapter.addTupleSink( joinNode );
 
-        alphaNode2.addObjectSink(joinNode);
+        alphaNode2.addObjectSink( joinNode );
 
-        joinNode.addTupleSink(terminalNode);
+        joinNode.addTupleSink( terminalNode );
 
         // Add OTN Cheese() to the Network
-        rete.addObjectSink(movieTypeNode);
+        rete.addObjectSink( movieTypeNode );
 
-        wm.insert(new Movie("Avengers"));
+        wm.insert( new Movie( "Avengers" ) );
         // Nothing happens until here.. let's add another Fact
-        assertEquals(0, wm.getAgenda().size());
+        assertEquals( 0, wm.getAgenda().size() );
 
-        wm.insert(new Movie("Back to the Future II"));
+        wm.insert( new Movie( "Back to the Future II" ) );
 
         wm.fireAllRules();
 
     }
+
+
+    /**
+     * rule movie<br/>
+     * when<br/>
+     * &nbsp;Movie( $actors : actors ) and $actor:String() from $actors<br/>
+     * &nbsp;eval( $actor != 'Actor 3' );<br/>
+     * then<br/>
+     * &nbsp;System.out.println( $actor );<br/>
+     * end<br/>
+     */
+    @Test
+    public void testFromRule() {
+
+        // Create Working Memory
+        final WorkingMemory wm = new WorkingMemoryImpl();
+        // Get the Root/Rete Node
+        final Rete rete = wm.getRete();
+
+        final ObjectTypeNode movieTypeNode = new ObjectTypeNode( Movie.class.getCanonicalName() );
+
+        final EmptyAlphaNode emptyAlphaNode = new EmptyAlphaNode( "$actors", "actors" );
+        movieTypeNode.addObjectSink( emptyAlphaNode );
+
+        final FromAlphaNode fromAlphaNode = new FromAlphaNode( new ClassVariable( "$actor" ), String.class, new FieldVariable( "$actors" ) );
+        emptyAlphaNode.addObjectSink( fromAlphaNode );
+
+        final EvalAlphaNode evalAlphaNode = new EvalAlphaNode( new FieldVariable( "$actor" ), "Actor 1", COMPARATOR.NOT_EQUAL );
+        fromAlphaNode.addObjectSink( evalAlphaNode );
+
+        LeftInputAdapterNode leftInputAdapter = new LeftInputAdapterNode();
+
+        evalAlphaNode.addObjectSink( leftInputAdapter );
+
+        final RuleTerminalNode terminalNode = new RuleTerminalNode( "rule movie", new DefaultAction() {
+
+            @Override
+            public void execute( String rule, Collection< Handle > handles, PropagationContext context ) {
+
+                System.out.println( getResult( context.getBindingVariables(), "$actor" ) );
+            }
+        } );
+        leftInputAdapter.addTupleSink( terminalNode );
+
+        // Add OTN Cheese() to the Network
+        rete.addObjectSink( movieTypeNode );
+
+        wm.insert( new Movie( "Avengers", Arrays.asList( "Actor 1", "Actor 2" ) ) );
+
+        wm.fireAllRules();
+
+    }
+
 
     /**
      * rule test<br/>
@@ -88,7 +145,8 @@ public class TestComplexJoins {
      * &nbsp;$cheese: Cheese()<br/>
      * &nbsp;$person2 : Person( favouriteCheese != $cheese.getName() )<br/>
      * then<br/>
-     * &nbsp;System.out.println( $person2.getName() + " does not like " + $cheese.getName() );<br/>
+     * &nbsp;System.out.println( $person2.getName() + " does not like " +
+     * $cheese.getName() );<br/>
      * end<br/>
      * *
      */
@@ -101,74 +159,76 @@ public class TestComplexJoins {
         final Rete rete = wm.getRete();
 
         // Create one Object Type Node: Cheese()
-        final ObjectTypeNode cheeseTypeNode = new ObjectTypeNode(Cheese.class.getCanonicalName());
+        final ObjectTypeNode cheeseTypeNode = new ObjectTypeNode( Cheese.class.getCanonicalName() );
 
-        final AlphaNode alphaNode = new AlphaNode("$cheddar", COMPARATOR.EQUAL, "name", "cheddar");
-        cheeseTypeNode.addObjectSink(alphaNode);
+        final AlphaNode alphaNode = new AlphaNode( "$cheddar", COMPARATOR.EQUAL, "name", "cheddar" );
+        cheeseTypeNode.addObjectSink( alphaNode );
 
         final LeftInputAdapterNode leftInputAdapter = new LeftInputAdapterNode();
-        alphaNode.addObjectSink(leftInputAdapter);
+        alphaNode.addObjectSink( leftInputAdapter );
 
-        final JoinNode joinNode = new JoinNode(new SingleValueRestrictionConstraint(
-                new FieldRestriction(new ClassVariable("$person"), Person.class, "favoriteCheese"), new FieldVariable("$cheddar"), COMPARATOR.EQUAL));
+        final JoinNode joinNode =
+            new JoinNode( new SingleValueRestrictionConstraint( new FieldRestriction( new ClassVariable( "$person" ), Person.class, "favoriteCheese" ),
+                new FieldVariable( "$cheddar" ), COMPARATOR.EQUAL ) );
 
-        final RuleTerminalNode terminalNode = new RuleTerminalNode("rule test", new DefaultAction() {
+        final RuleTerminalNode terminalNode = new RuleTerminalNode( "rule test", new DefaultAction() {
 
             @Override
-            public void execute(String rule, Collection<Handle> handles, PropagationContext context) {
+            public void execute( String rule, Collection< Handle > handles, PropagationContext context ) {
 
-                System.out.println(getResult(handles, context.getBindingVariables(), "$person", "getName") + " likes cheese");
+                System.out.println( getResult( handles, context.getBindingVariables(), "$person", "getName" ) + " likes cheese" );
             }
-        });
-        leftInputAdapter.addTupleSink(joinNode);
+        } );
+        leftInputAdapter.addTupleSink( joinNode );
 
         // Add OTN Cheese() to the Network
-        rete.addObjectSink(cheeseTypeNode);
+        rete.addObjectSink( cheeseTypeNode );
 
         // Create one Object Type Node: Person()
-        final ObjectTypeNode personTypeNode = new ObjectTypeNode(Person.class.getCanonicalName());
+        final ObjectTypeNode personTypeNode = new ObjectTypeNode( Person.class.getCanonicalName() );
 
-        personTypeNode.addObjectSink(joinNode);
+        personTypeNode.addObjectSink( joinNode );
 
-        joinNode.addTupleSink(terminalNode);
+        joinNode.addTupleSink( terminalNode );
 
         // Add OTN Person() to the Network
-        rete.addObjectSink(personTypeNode);
+        rete.addObjectSink( personTypeNode );
 
-        final EmptyAlphaNode emptyAlphaNode = new EmptyAlphaNode(new ClassVariable("$cheese"));
-        cheeseTypeNode.addObjectSink(emptyAlphaNode);
+        final EmptyAlphaNode emptyAlphaNode = new EmptyAlphaNode( new ClassVariable( "$cheese" ) );
+        cheeseTypeNode.addObjectSink( emptyAlphaNode );
 
         final LeftInputAdapterNode leftInputAdapter2 = new LeftInputAdapterNode();
-        emptyAlphaNode.addObjectSink(leftInputAdapter2);
+        emptyAlphaNode.addObjectSink( leftInputAdapter2 );
 
-        final JoinNode joinNode2 = new JoinNode(
-                new SingleValueRestrictionConstraint(new FieldRestriction(new ClassVariable("$person2"), Person.class, "favoriteCheese"),
-                        new FieldVariable("$cheese", "getName"), COMPARATOR.NOT_EQUAL));
+        final JoinNode joinNode2 =
+            new JoinNode( new SingleValueRestrictionConstraint( new FieldRestriction( new ClassVariable( "$person2" ), Person.class, "favoriteCheese" ),
+                new FieldVariable( "$cheese", "getName" ), COMPARATOR.NOT_EQUAL ) );
 
-        final RuleTerminalNode terminalNode2 = new RuleTerminalNode("rule test2", new DefaultAction() {
+        final RuleTerminalNode terminalNode2 = new RuleTerminalNode( "rule test2", new DefaultAction() {
 
             @Override
-            public void execute(String rule, Collection<Handle> handles, PropagationContext context) {
+            public void execute( String rule, Collection< Handle > handles, PropagationContext context ) {
 
-                System.out.println(getResult(handles, context.getBindingVariables(), "$person2", "getName") + " does not like "
-                        + getResult(handles, context.getBindingVariables(), "$cheese", "getName"));
+                System.out.println(
+                    getResult( handles, context.getBindingVariables(), "$person2", "getName" ) + " does not like "
+                        + getResult( handles, context.getBindingVariables(), "$cheese", "getName" ) );
             }
-        });
-        leftInputAdapter2.addTupleSink(joinNode2);
+        } );
+        leftInputAdapter2.addTupleSink( joinNode2 );
 
-        personTypeNode.addObjectSink(joinNode2);
+        personTypeNode.addObjectSink( joinNode2 );
 
-        joinNode2.addTupleSink(terminalNode2);
+        joinNode2.addTupleSink( terminalNode2 );
 
         // Let's use the network
-        wm.insert(new Person("Fulano", "cheddar"));
+        wm.insert( new Person( "Fulano", "cheddar" ) );
         // Nothing happens until here.. let's add another Fact
-        assertEquals(0, wm.getAgenda().size());
+        assertEquals( 0, wm.getAgenda().size() );
 
-        wm.insert(new Cheese("parmesan"));
+        wm.insert( new Cheese( "parmesan" ) );
 
         final int fired = wm.fireAllRules();
-        assertEquals(1, fired);
+        assertEquals( 1, fired );
 
     }
 

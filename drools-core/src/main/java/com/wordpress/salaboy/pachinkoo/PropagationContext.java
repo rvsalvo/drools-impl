@@ -4,8 +4,10 @@
  */
 package com.wordpress.salaboy.pachinkoo;
 
+
 import java.util.HashMap;
 import java.util.Map;
+
 
 /**
  *
@@ -13,19 +15,24 @@ import java.util.Map;
  */
 public class PropagationContext {
 
-    private final Map<String, Object> bindingVariables;
+    private final Map< String, Object > bindingVariables = new HashMap<>();
+
 
     public PropagationContext() {
+
         super();
-        this.bindingVariables = new HashMap<>();
     }
 
-    public PropagationContext(Map<String, Object> bindingVariables) {
+
+    public PropagationContext( Map< String, Object > bindingVariables ) {
+
         super();
-        this.bindingVariables = bindingVariables;
+        this.bindingVariables.putAll( bindingVariables );
     }
 
-    public Map<String, Object> getBindingVariables() {
+
+    public Map< String, Object > getBindingVariables() {
+
         return bindingVariables;
     }
 
